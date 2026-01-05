@@ -29,16 +29,7 @@ PanelWindow {
     property string searchText: ""
     property bool appsLoaded: false
 
-    readonly property var commands: [
-        { name: "Reboot", exec: "systemctl reboot", icon: "system-reboot", isCmd: true },
-        { name: "Shutdown", exec: "systemctl poweroff", icon: "system-shutdown", isCmd: true },
-        { name: "Suspend", exec: "systemctl suspend", icon: "system-suspend", isCmd: true },
-        { name: "Hibernate", exec: "systemctl hibernate", icon: "system-hibernate", isCmd: true },
-        { name: "Lock", exec: "hyprlock", icon: "system-lock-screen", isCmd: true },
-        { name: "Logout", exec: "hyprctl dispatch exit", icon: "system-log-out", isCmd: true },
-        { name: "Kill Window", exec: "hyprctl kill", icon: "window-close", isCmd: true },
-        { name: "Reload Hyprland", exec: "hyprctl reload", icon: "view-refresh", isCmd: true }
-    ]
+    property var commands: []
 
     Component.onCompleted: loadApps()
 
@@ -63,25 +54,44 @@ PanelWindow {
     function filterApps() {
         if (searchText === "") {
             filteredApps = apps.slice(0, 12)
+            commands = []
         } else {
             var query = searchText.toLowerCase()
             var result = []
 
-            for (var i = 0; i < commands.length && result.length < 12; i++) {
-                if (commands[i].name.toLowerCase().indexOf(query) !== -1) {
-                    result.push(commands[i])
-                }
-            }
-
-            for (var j = 0; j < apps.length && result.length < 12; j++) {
+            for (var j = 0; j < apps.length && result.length < 8; j++) {
                 if (apps[j].name.toLowerCase().indexOf(query) !== -1) {
                     result.push(apps[j])
                 }
             }
 
+            if (result.length < 8 && searchText.length >= 2) {
+                cmdProc.command = ["sh", "-c", "compgen -c " + searchText + " 2>/dev/null | head -5"]
+                cmdProc.running = true
+            }
+
             filteredApps = result
         }
         selectedIndex = 0
+    }
+
+    Process {
+        id: cmdProc
+        stdout: SplitParser {
+            onRead: data => {
+                if (data && data.length > 0) {
+                    var newCmds = launcher.commands.slice()
+                    newCmds.push({ name: data, exec: data, icon: "", isCmd: true })
+                    launcher.commands = newCmds
+                    var newFiltered = launcher.filteredApps.slice()
+                    if (newFiltered.length < 12) {
+                        newFiltered.push({ name: data, exec: data, icon: "", isCmd: true })
+                        launcher.filteredApps = newFiltered
+                    }
+                }
+            }
+        }
+        onStarted: launcher.commands = []
     }
 
     function launchApp(exec) {
