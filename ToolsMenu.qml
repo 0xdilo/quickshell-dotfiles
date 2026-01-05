@@ -214,15 +214,9 @@ PanelWindow {
         }
     }
 
-    Rectangle {
+    MouseArea {
         anchors.fill: parent
-        color: "#80000000"
-        z: -1
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: root.hide()
-        }
+        onClicked: root.hide()
     }
 
     Rectangle {

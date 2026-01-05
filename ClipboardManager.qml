@@ -91,15 +91,9 @@ PanelWindow {
         id: selectProc
     }
 
-    Rectangle {
+    MouseArea {
         anchors.fill: parent
-        color: "#80000000"
-        z: -1
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: clipboard.hide()
-        }
+        onClicked: clipboard.hide()
     }
 
     Rectangle {
