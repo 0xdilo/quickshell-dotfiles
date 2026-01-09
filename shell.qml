@@ -96,18 +96,20 @@ ShellRoot {
     }
 
     property int osdVolume: 50
-    property int osdBrightness: 0
+    property int osdBrightness: 50
+    property string osdType: "volume"
     property bool osdVisible: false
     property int lastVolume: -1
+    property int lastBrightness: -1
 
     Timer {
-        id: volumeCheckTimer
-        interval: 200
+        id: pollTimer
+        interval: 50
         running: true
         repeat: true
-
         onTriggered: {
             checkVolumeProc.running = true
+            checkBrightnessProc.running = true
         }
     }
 
@@ -119,10 +121,28 @@ ShellRoot {
                 var newVolume = parseInt(data) || 0
                 if (newVolume !== shell.lastVolume && shell.lastVolume !== -1) {
                     shell.osdVolume = newVolume
+                    shell.osdType = "volume"
                     shell.osdVisible = true
                     hideTimer.restart()
                 }
                 shell.lastVolume = newVolume
+            }
+        }
+    }
+
+    Process {
+        id: checkBrightnessProc
+        command: ["sh", "-c", "brightnessctl -m 2>/dev/null | cut -d',' -f4 | tr -d '%'"]
+        stdout: SplitParser {
+            onRead: data => {
+                var newBrightness = parseInt(data) || 0
+                if (newBrightness !== shell.lastBrightness && shell.lastBrightness !== -1) {
+                    shell.osdBrightness = newBrightness
+                    shell.osdType = "brightness"
+                    shell.osdVisible = true
+                    hideTimer.restart()
+                }
+                shell.lastBrightness = newBrightness
             }
         }
     }
@@ -184,24 +204,30 @@ ShellRoot {
                     anchors.bottomMargin: 80
 
                     opacity: osdWindow.shouldShow ? 1 : 0
-                    scale: osdWindow.shouldShow ? 1 : 0.8
 
                     Behavior on opacity {
-                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: 150 }
                     }
-                    Behavior on scale {
-                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                    }
+
+                    property bool isVolume: shell.osdType === "volume"
+                    property int value: isVolume ? shell.osdVolume : shell.osdBrightness
 
                     Row {
                         anchors.centerIn: parent
                         spacing: 14
 
                         Text {
-                            text: shell.osdVolume === 0 ? "\uf6a9" : (shell.osdVolume < 50 ? "\uf027" : "\uf028")
+                            text: {
+                                if (osdCard.isVolume) {
+                                    return shell.osdVolume === 0 ? "\uf026" : (shell.osdVolume < 50 ? "\uf027" : "\uf028")
+                                } else {
+                                    return shell.osdBrightness < 30 ? "\uf185" : (shell.osdBrightness < 70 ? "\uf185" : "\uf185")
+                                }
+                            }
                             font.family: Theme.fontFamily
                             font.pixelSize: 18
                             color: Theme.accent
+                            opacity: osdCard.isVolume ? 1 : (shell.osdBrightness < 30 ? 0.5 : 1)
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
@@ -211,7 +237,6 @@ ShellRoot {
                             anchors.verticalCenter: parent.verticalCenter
 
                             Rectangle {
-                                id: barBg
                                 anchors.fill: parent
                                 radius: 3
                                 color: Theme.surface
@@ -219,7 +244,7 @@ ShellRoot {
 
                             Rectangle {
                                 id: barFill
-                                width: parent.width * shell.osdVolume / 100
+                                width: parent.width * osdCard.value / 100
                                 height: parent.height
                                 radius: 3
 
@@ -230,18 +255,14 @@ ShellRoot {
                                     GradientStop { position: 1.0; color: Qt.lighter(Theme.accent, 1.2) }
                                 }
 
-                                Behavior on width {
-                                    NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
-                                }
-                            }
+                                                            }
 
                             Rectangle {
-                                id: barGlow
                                 width: barFill.width
                                 height: parent.height + 8
                                 y: -4
                                 radius: 6
-                                visible: shell.osdVolume > 0
+                                visible: osdCard.value > 0
                                 opacity: 0.3
 
                                 gradient: Gradient {
@@ -251,14 +272,11 @@ ShellRoot {
                                     GradientStop { position: 1.0; color: Theme.accent }
                                 }
 
-                                Behavior on width {
-                                    NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
-                                }
-                            }
+                                                            }
                         }
 
                         Text {
-                            text: shell.osdVolume + "%"
+                            text: osdCard.value + "%"
                             font.family: Theme.fontFamily
                             font.pixelSize: 14
                             font.weight: Font.Medium
