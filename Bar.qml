@@ -10,8 +10,8 @@ PanelWindow {
 
     signal launcherRequested()
 
-    required property var screen
-    screen: screen
+    required property var targetScreen
+    screen: targetScreen
 
     anchors {
         top: true

@@ -12,6 +12,8 @@ PanelWindow {
     visible: false
     color: "transparent"
 
+    signal closed()
+
     anchors {
         top: true
         left: true
@@ -45,6 +47,7 @@ PanelWindow {
 
     function hide() {
         visible = false
+        closed()
     }
 
     function loadApps() {

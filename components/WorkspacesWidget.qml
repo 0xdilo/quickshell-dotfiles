@@ -8,8 +8,9 @@ Item {
     implicitHeight: 30
 
     property int maxWs: {
+        if (!Hyprland.focusedMonitor) return 5
         var max = 5
-        var list = Hyprland.workspaces.values
+        var list = Hyprland.workspaces?.values ?? []
         for (var i = 0; i < list.length; i++) {
             if (list[i].id > max) max = list[i].id
         }
@@ -32,7 +33,7 @@ Item {
                 property var focused: Hyprland.focusedMonitor?.activeWorkspace
                 property bool active: focused?.id === wsId
                 property bool occupied: {
-                    var list = Hyprland.workspaces.values
+                    var list = Hyprland.workspaces?.values ?? []
                     for (var i = 0; i < list.length; i++) {
                         if (list[i].id === wsId && list[i].windows > 0) return true
                     }

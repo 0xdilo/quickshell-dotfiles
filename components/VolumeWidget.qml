@@ -35,6 +35,17 @@ Rectangle {
         stdout: SplitParser { onRead: data => muted = (parseInt(data) === 1) }
     }
 
+    Process {
+        id: setVolProc
+        command: ["sh", "-c", "pactl set-sink-volume @DEFAULT_SINK@ " + volChange]
+        property string volChange
+    }
+
+    Process {
+        id: setMuteProc
+        command: ["sh", "-c", "pactl set-sink-mute @DEFAULT_SINK@ toggle"]
+    }
+
     Row {
         id: volRow
         anchors.centerIn: parent
@@ -68,14 +79,15 @@ Rectangle {
         onClicked: mouse => {
             if (mouse.button === Qt.LeftButton) Hyprland.dispatch("exec pavucontrol")
             else {
-                Hyprland.dispatch("exec pactl set-sink-mute @DEFAULT_SINK@ toggle")
+                setMuteProc.running = true
                 muteProc.running = true
             }
         }
 
         onWheel: wheel => {
             var delta = wheel.angleDelta.y > 0 ? "+5%" : "-5%"
-            Hyprland.dispatch("exec pactl set-sink-volume @DEFAULT_SINK@ " + delta)
+            setVolProc.volChange = delta
+            setVolProc.running = true
             volProc.running = true
         }
     }
