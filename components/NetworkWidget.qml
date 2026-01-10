@@ -10,7 +10,7 @@ Rectangle {
     radius: 14
     color: netMouse.containsMouse ? Qt.rgba(theme.icon.r, theme.icon.g, theme.icon.b, 0.1) : "transparent"
 
-    Behavior on color { CAnim {} }
+    Behavior on color { ColorAnimation { duration: 100; easing.type: Easing.OutQuad } }
 
     property string ssid: ""
     property string status: "disconnected"
@@ -66,7 +66,7 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             visible: ssid.length > 0 || status === "disconnected"
 
-            Behavior on color { CAnim {} }
+            Behavior on color { ColorAnimation { duration: 100; easing.type: Easing.OutQuad } }
         }
     }
 

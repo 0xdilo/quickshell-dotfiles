@@ -8,7 +8,7 @@ Rectangle {
     radius: 15
     color: clockMouse.containsMouse ? Qt.rgba(theme.accent.r, theme.accent.g, theme.accent.b, 0.12) : "transparent"
 
-    Behavior on color { CAnim {} }
+    Behavior on color { ColorAnimation { duration: 100; easing.type: Easing.OutQuad } }
 
     signal clicked()
 
@@ -24,7 +24,7 @@ Rectangle {
             color: clockMouse.containsMouse ? theme.accent : theme.icon
             anchors.verticalCenter: parent.verticalCenter
 
-            Behavior on color { CAnim {} }
+            Behavior on color { ColorAnimation { duration: 100; easing.type: Easing.OutQuad } }
         }
 
         Column {
